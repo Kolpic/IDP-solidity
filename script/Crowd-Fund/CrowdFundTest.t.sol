@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 // 1. MOCK TOKEN FOR TESTING
 contract MockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") {}
+
     function mint(address to, uint256 amount) public {
         _mint(to, amount);
     }
@@ -46,8 +47,8 @@ contract CrowdFundTest is Test {
         vm.prank(creator);
         // Start now, end in 1 day
         crowdFund.launch(100 ether, uint32(block.timestamp), uint32(block.timestamp + 1 days));
-        
-        (address _creator, uint _goal, uint _pledged,,,) = crowdFund.campaigns(1);
+
+        (address _creator, uint256 _goal, uint256 _pledged,,,) = crowdFund.campaigns(1);
         assertEq(_creator, creator);
         assertEq(_goal, 100 ether);
         assertEq(_pledged, 0);
@@ -63,7 +64,7 @@ contract CrowdFundTest is Test {
         crowdFund.pledge(1, 50 ether);
 
         // 3. Check State
-        (,, uint pledged,,,) = crowdFund.campaigns(1);
+        (,, uint256 pledged,,,) = crowdFund.campaigns(1);
         assertEq(pledged, 50 ether);
         assertEq(token.balanceOf(address(crowdFund)), 50 ether);
     }
@@ -112,11 +113,11 @@ contract CrowdFundTest is Test {
     /* ==========================================================================
        FUZZ TESTS (Testing random inputs)
        ========================================================================== */
-    
+
     // Foundry will run this function hundreds of times with random numbers for `amount`
     function testFuzz_Pledge(uint96 amount) public {
         // Constraint: Don't pledge 0, don't pledge more than user has
-        vm.assume(amount > 0); 
+        vm.assume(amount > 0);
         vm.assume(amount <= 1000 ether);
 
         vm.prank(creator);
@@ -125,7 +126,7 @@ contract CrowdFundTest is Test {
         vm.prank(user1);
         crowdFund.pledge(1, amount);
 
-        (,, uint pledged,,,) = crowdFund.campaigns(1);
+        (,, uint256 pledged,,,) = crowdFund.campaigns(1);
         assertEq(pledged, amount);
     }
 
@@ -138,7 +139,7 @@ contract CrowdFundTest is Test {
 
         vm.prank(creator);
         crowdFund.launch(100 ether, startAt, endAt);
-        
+
         (,,, uint32 s, uint32 e,) = crowdFund.campaigns(1);
         assertEq(s, startAt);
         assertEq(e, endAt);
@@ -147,7 +148,7 @@ contract CrowdFundTest is Test {
     /* ==========================================================================
        INVARIANT TESTS (Properties that must ALWAYS be true)
        ========================================================================== */
-    
+
     function testInvariant_ContractBalanceMatchesPledges() public {
         // 1. Setup a scenario with multiple pledges
         vm.prank(creator);
