@@ -46,7 +46,7 @@ contract MultiSigWallet is IMultiSigWallet {
         if (_owners.length <= 0) {
             revert OwnerIsRequired();
         }
-        if (_required <= 0 && _required < _owners.length) {
+        if (_required <= 0 || _required > _owners.length) {
             revert InvalidReqiredNumberOfOwners();
         }
 
