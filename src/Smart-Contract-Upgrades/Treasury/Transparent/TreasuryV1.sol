@@ -1,23 +1,57 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-contract CounterV1 {
-    uint256 public count;
+library StorageSlot {
+    struct AddressSlot {
+        address value;
+    }
 
-    function inc() external {
-        count += 1;
+    function getAddressSlot(bytes32 slot) internal pure returns (AddressSlot storage r) {
+        assembly {
+            r.slot := slot
+        }
     }
 }
 
-contract CounterV2 {
-    uint256 public count;
+contract TreasuryV1 {
+    uint256 public totalDeposits;
+    mapping(address => uint256) public userBalances;
+    bool public depositsEnabled;
+    address public owner;
 
-    function inc() external {
-        count += 1;
+    function setOwner(address _owner) external {
+        require(owner == address(0), "Already initialized");
+        owner = _owner;
     }
 
-    function dec() external {
-        count -= 1;
+    modifier onlyOwner() {
+        require (msg.sender == owner, "Not a owner");
+        _;
+    }
+
+    // --- User Functions ---
+
+    function deposit(uint256 amount) external payable virtual {
+        require(depositsEnabled, "Deposits are currently disabled");
+        userBalances[msg.sender] += amount;
+        totalDeposits += amount;
+    }
+
+    function withdraw(uint256 _amount) external virtual {
+        require(userBalances[msg.sender] >= _amount, "Insufficient balance");
+        userBalances[msg.sender] -= _amount;
+        totalDeposits -= _amount;
+        payable(msg.sender).transfer(_amount);
+    }
+
+    function getMyBalance() external view virtual returns (uint256) {
+        return userBalances[msg.sender];
+    }
+
+    // --- Admin Functions ---
+
+    function toggleDeposits() external virtual onlyOwner {
+        depositsEnabled = !depositsEnabled;
     }
 }
 
@@ -129,31 +163,12 @@ contract ProxyAdmin {
         Proxy(proxy).changeAdmin(admin);
     }
 
-    function upgrade(address payable proxy, address implementation) external onlyOwner{
+    function upgrade(address payable proxy, address implementation) external onlyOwner {
         Proxy(proxy).upgradeTo(implementation);
     }
-}
 
-library StorageSlot {
-    struct AddressSlot {
-        address value;
-    }
-
-    function getAddressSlot(bytes32 slot) internal pure returns (AddressSlot storage r) {
-        assembly {
-            r.slot := slot
-        }
-    }
-}
-
-contract TestSlot {
-    bytes32 public constant slot = keccak256("TEST_SLOT");
-
-    function getSlot() external view returns (address) {
-        return StorageSlot.getAddressSlot(slot).value;
-    }
-
-    function writeSlot(address _addr) external {
-        StorageSlot.getAddressSlot(slot).value = _addr;
+    function toggleTreasuryDeposits(address payable proxy) external onlyOwner {
+        (bool ok, ) = proxy.call(abi.encodeWithSignature("toggleDeposits()"));
+        require(ok, "Transaction to logic failed");
     }
 }
