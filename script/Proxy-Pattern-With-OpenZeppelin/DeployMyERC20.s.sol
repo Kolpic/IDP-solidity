@@ -15,8 +15,9 @@ contract DeployMyERC20 is Script {
     function run() public returns (address, address) {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
+        address deployer = msg.sender;
 
-        address proxy = Upgrades.deployUUPSProxy("MyERC20.sol", abi.encodeCall(MyERC20.initialize, ()));
+        address proxy = Upgrades.deployUUPSProxy("MyERC20.sol", abi.encodeCall(MyERC20.initialize, (deployer)));
         address implementationAddress = Upgrades.getImplementationAddress(proxy);
 
         vm.stopBroadcast();

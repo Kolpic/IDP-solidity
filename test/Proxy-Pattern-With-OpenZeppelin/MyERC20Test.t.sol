@@ -13,8 +13,9 @@ contract MyERC20Test is Test {
     address user = makeAddr("user");
 
     function setUp() public {
-        vm.prank(owner);
-        proxyAddress = Upgrades.deployTransparentProxy("MyERC20.sol", owner, abi.encodeCall(MyERC20.initialize, ()));
+        proxyAddress = Upgrades.deployUUPSProxy("MyERC20.sol", abi.encodeCall(MyERC20.initialize, (address(this))));
+
+        MyERC20(proxyAddress).transferOwnership(owner);
     }
 
     function testDeployment() public view {
@@ -38,7 +39,7 @@ contract MyERC20Test is Test {
         assertEq(proxy.counter(), 1);
 
         vm.prank(owner);
-        Upgrades.upgradeProxy(proxyAddress, "MyERC20v2Second.sol", "");
+        Upgrades.upgradeProxy(proxyAddress, "MyERC20v2.sol:MyERC20v2", "");
         vm.stopPrank();
 
         MyERC20v2 proxyV2 = MyERC20v2(proxyAddress);
