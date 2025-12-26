@@ -21,10 +21,10 @@ contract MultiSigHandler is Test {
     // Proxy for submit
     function submit(uint256 ownerIndex, address _to, uint256 _value, bytes calldata _data) public {
         address owner = _getOwner(ownerIndex);
-        
+
         vm.prank(owner);
         wallet.submit(_to, _value, _data);
-        
+
         ghost_transactionCount++;
     }
 
@@ -41,8 +41,9 @@ contract MultiSigHandler is Test {
         if (executed) return;
 
         try wallet.approve(txId) {
-            // success
-        } catch {
+        // success
+        }
+            catch {
             // ignore expected reverts
         }
     }
@@ -56,8 +57,9 @@ contract MultiSigHandler is Test {
         vm.deal(address(wallet), 100 ether);
 
         try wallet.execute(txId) {
-            // success
-        } catch {
+        // success
+        }
+            catch {
             // ignore
         }
     }

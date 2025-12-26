@@ -8,20 +8,20 @@ import "../../src/Multi-Sig-Wallet/interfaces/IMultiSigWallet.sol";
 
 contract MultiSigWalletTest is Test {
     MultiSigWallet public wallet;
-    
+
     address[] public owners;
     address public owner1 = address(0x1);
     address public owner2 = address(0x2);
     address public owner3 = address(0x3);
     address public nonOwner = address(0x4);
-    
+
     uint256 public required = 2;
 
-    event Deposit(address indexed sender, uint amount);
-    event Submit(uint indexed txId);
-    event Approve(address indexed owner, uint indexed txId);
-    event Revoke(address indexed owner, uint indexed txId);
-    event Execute(uint indexed txId);
+    event Deposit(address indexed sender, uint256 amount);
+    event Submit(uint256 indexed txId);
+    event Approve(address indexed owner, uint256 indexed txId);
+    event Revoke(address indexed owner, uint256 indexed txId);
+    event Execute(uint256 indexed txId);
 
     function setUp() public {
         owners.push(owner1);
@@ -72,11 +72,11 @@ contract MultiSigWalletTest is Test {
     function test_Receive() public {
         vm.deal(nonOwner, 1 ether);
         vm.prank(nonOwner);
-        
+
         vm.expectEmit(true, false, false, true);
         emit Deposit(nonOwner, 1 ether);
-        
-        (bool success, ) = address(wallet).call{value: 1 ether}("");
+
+        (bool success,) = address(wallet).call{value: 1 ether}("");
         assertTrue(success);
         assertEq(address(wallet).balance, 1 ether);
     }
@@ -85,9 +85,9 @@ contract MultiSigWalletTest is Test {
         vm.prank(owner1);
         vm.expectEmit(true, false, false, false);
         emit Submit(0);
-        
+
         wallet.submit(nonOwner, 1 ether, "");
-        
+
         (address to, uint256 value, bytes memory data, bool executed) = wallet.transactions(0);
         assertEq(to, nonOwner);
         assertEq(value, 1 ether);
@@ -125,7 +125,7 @@ contract MultiSigWalletTest is Test {
         vm.startPrank(owner1);
         wallet.submit(nonOwner, 0, "");
         wallet.approve(0);
-        
+
         vm.expectRevert(IMultiSigWallet.TxAlreadyApproved.selector);
         wallet.approve(0);
         vm.stopPrank();
@@ -135,7 +135,7 @@ contract MultiSigWalletTest is Test {
         vm.startPrank(owner1);
         wallet.submit(nonOwner, 0, "");
         wallet.approve(0);
-        
+
         vm.expectEmit(true, true, false, false);
         emit Revoke(owner1, 0);
         wallet.revoke(0);
@@ -173,7 +173,7 @@ contract MultiSigWalletTest is Test {
     function testRevert_ExecuteInsufficientApprovals() public {
         vm.prank(owner1);
         wallet.submit(nonOwner, 0, "");
-        
+
         vm.prank(owner1);
         wallet.approve(0);
 
@@ -184,7 +184,7 @@ contract MultiSigWalletTest is Test {
 
     function testRevert_ExecuteAlreadyExecuted() public {
         vm.deal(address(wallet), 1 ether);
-        
+
         // Setup valid execution
         vm.prank(owner1);
         wallet.submit(nonOwner, 1 ether, "");
@@ -192,7 +192,7 @@ contract MultiSigWalletTest is Test {
         wallet.approve(0);
         vm.prank(owner2);
         wallet.approve(0);
-        
+
         wallet.execute(0);
 
         // Try again

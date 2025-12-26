@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 /// @custom:oz-upgrades-from TreasuryUUPSV1
 contract TreasuryUUPSV2 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
@@ -12,15 +12,15 @@ contract TreasuryUUPSV2 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     bool public depositsEnabled;
     // NEW VARIABLES
     mapping(address => bool) public blacklisted;
-    uint256 public yieldBonus; 
-    uint256[45] private __gap; 
+    uint256 public yieldBonus;
+    uint256[45] private __gap;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers(); 
+        _disableInitializers();
     }
 
-    // V2 doesn't need an initialize function if V1 was already called, 
+    // V2 doesn't need an initialize function if V1 was already called,
     // but it MUST keep _authorizeUpgrade to remain upgradeable.
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 

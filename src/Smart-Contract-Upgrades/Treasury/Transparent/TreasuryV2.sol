@@ -5,14 +5,14 @@ import "./TreasuryV1.sol";
 
 contract TreasuryV2 is TreasuryV1 {
     mapping(address => bool) public blacklisted;
-    uint256 public yieldBonus; 
+    uint256 public yieldBonus;
 
     // --- User Functions ---
 
     function deposit(uint256 amount) external payable override {
         require(!blacklisted[msg.sender], "User is blacklisted");
         require(depositsEnabled, "Deposits are currently disabled");
-        
+
         userBalances[msg.sender] += amount;
         totalDeposits += amount;
     }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import { IMultiSigWallet } from './interfaces/IMultiSigWallet.sol';
-import { DataTypes } from './libs/DataTypes.sol';
+import {IMultiSigWallet} from "./interfaces/IMultiSigWallet.sol";
+import {DataTypes} from "./libs/DataTypes.sol";
 
 contract MultiSigWallet is IMultiSigWallet {
     // state variables
@@ -22,7 +22,7 @@ contract MultiSigWallet is IMultiSigWallet {
     }
 
     modifier txExists(uint256 _txId) {
-        if (_txId >= transactions.length){
+        if (_txId >= transactions.length) {
             revert TxDoesNotExist();
         }
         _;
@@ -50,7 +50,7 @@ contract MultiSigWallet is IMultiSigWallet {
             revert InvalidReqiredNumberOfOwners();
         }
 
-        for (uint256 i; i <_owners.length; i++) {
+        for (uint256 i; i < _owners.length; i++) {
             address owner = _owners[i];
 
             if (owner == address(0)) {
@@ -71,23 +71,12 @@ contract MultiSigWallet is IMultiSigWallet {
     }
 
     function submit(address _to, uint256 _value, bytes calldata _data) external override onlyOwner {
-        transactions.push(DataTypes.Transaction({
-            to: _to,
-            value: _value,
-            data: _data,
-            executed: false
-        }));
+        transactions.push(DataTypes.Transaction({to: _to, value: _value, data: _data, executed: false}));
 
         emit Submit(transactions.length - 1);
     }
 
-    function approve(uint256 _txId) external 
-        override 
-        onlyOwner 
-        txExists(_txId) 
-        notApproved(_txId) 
-        notExecuted(_txId) 
-    {
+    function approve(uint256 _txId) external override onlyOwner txExists(_txId) notApproved(_txId) notExecuted(_txId) {
         approved[_txId][msg.sender] = true;
         emit Approve(msg.sender, _txId);
     }
@@ -108,7 +97,7 @@ contract MultiSigWallet is IMultiSigWallet {
         DataTypes.Transaction storage transaction = transactions[_txId];
         transaction.executed = true;
 
-        (bool success, ) = transaction.to.call{value: transaction.value}(transaction.data);
+        (bool success,) = transaction.to.call{value: transaction.value}(transaction.data);
 
         if (!success) {
             revert ExecutionFailed();
@@ -116,13 +105,7 @@ contract MultiSigWallet is IMultiSigWallet {
         emit Execute(_txId);
     }
 
-    function revoke(uint256 _txId) 
-        external
-        override
-        onlyOwner
-        txExists(_txId)
-        notExecuted(_txId) 
-    {
+    function revoke(uint256 _txId) external override onlyOwner txExists(_txId) notExecuted(_txId) {
         if (!approved[_txId][msg.sender]) {
             revert TxNotApproved();
         }

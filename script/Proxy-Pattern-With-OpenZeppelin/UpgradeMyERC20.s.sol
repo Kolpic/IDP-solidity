@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Upgrades } from "openzeppelin-foundry-upgrades/Upgrades.sol";
-import { Script, console } from "forge-std/Script.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
+import {Script, console} from "forge-std/Script.sol";
 
-import { MyERC20v2 } from "../../src/Smart-Contract-Upgrades/Proxy-Pattern-With-OpenZeppelin/MyERC20v2.sol";
+import {MyERC20v2} from "../../src/Smart-Contract-Upgrades/Proxy-Pattern-With-OpenZeppelin/MyERC20v2.sol";
 
 contract UpgradeMyERC20Script is Script {
     function setUp() public {}

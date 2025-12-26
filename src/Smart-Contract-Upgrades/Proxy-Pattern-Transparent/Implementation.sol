@@ -83,7 +83,7 @@ contract Proxy {
                 revert(0, returndatasize())
             }
             default {
-                return (0, returndatasize())
+                return(0, returndatasize())
             }
         }
     }
@@ -129,7 +129,7 @@ contract ProxyAdmin {
         Proxy(proxy).changeAdmin(admin);
     }
 
-    function upgrade(address payable proxy, address implementation) external onlyOwner{
+    function upgrade(address payable proxy, address implementation) external onlyOwner {
         Proxy(proxy).upgradeTo(implementation);
     }
 }

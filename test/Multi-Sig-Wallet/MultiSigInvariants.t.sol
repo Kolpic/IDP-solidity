@@ -27,7 +27,7 @@ contract MultiSigInvariants is Test {
         assertEq(wallet.owners(0), address(0x11));
         assertEq(wallet.owners(1), address(0x22));
         assertEq(wallet.owners(2), address(0x33));
-        // Check array length if a getter existed for length, 
+        // Check array length if a getter existed for length,
         // or just try accessing index 3 and expect revert if strictly checking bounds
     }
 
@@ -41,16 +41,16 @@ contract MultiSigInvariants is Test {
     function invariant_TransactionCountConsistency() public {
         // Note: We need a helper to get array length since 'transactions' is public array
         // but solidity getter only returns items by index.
-        // We can't easily get length via auto-generated getter. 
+        // We can't easily get length via auto-generated getter.
         // We rely on the fact that if index X exists, length > X.
-        
+
         uint256 ghostCount = handler.ghost_transactionCount();
         if (ghostCount > 0) {
             // Should be able to query the last element
             (address to,,,) = wallet.transactions(ghostCount - 1);
             assertTrue(to != address(0) || to == address(0)); // Just ensuring it doesn't revert
         }
-        
+
         // Should revert if we try to access out of bounds
         vm.expectRevert();
         wallet.transactions(ghostCount);

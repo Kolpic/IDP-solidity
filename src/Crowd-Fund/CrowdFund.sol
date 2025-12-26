@@ -42,12 +42,7 @@ contract CrowdFund is ICrowdFund {
 
         count += 1;
         campaigns[count] = DataTypes.Campaign({
-            creator: msg.sender,
-            goal: _goal,
-            pledged: 0,
-            startAt: _startAt,
-            endAt: _endAt,
-            claimed: false
+            creator: msg.sender, goal: _goal, pledged: 0, startAt: _startAt, endAt: _endAt, claimed: false
         });
 
         emit CampaignLaunched(count, msg.sender, _goal, _startAt, _endAt);

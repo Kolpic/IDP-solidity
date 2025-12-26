@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { UUPSUpgradeable } from "@openzeppelin/contracts-v2/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-v2/proxy/utils/UUPSUpgradeable.sol";
 
 contract TreasuryUUPSV1 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     uint256 public totalDeposits;
@@ -13,7 +13,7 @@ contract TreasuryUUPSV1 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers(); 
+        _disableInitializers();
     }
 
     /**
@@ -25,7 +25,7 @@ contract TreasuryUUPSV1 is Initializable, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @dev Required by UUPSUpgradeable. 
+     * @dev Required by UUPSUpgradeable.
      * Restricts who can upgrade the contract to the owner.
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}

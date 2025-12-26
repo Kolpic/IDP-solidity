@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Upgrades } from "openzeppelin-foundry-upgrades/Upgrades.sol";
-import { Test, console } from "forge-std/Test.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
+import {Test, console} from "forge-std/Test.sol";
 
-import { MyERC20 } from "../../src/Smart-Contract-Upgrades/Proxy-Pattern-With-OpenZeppelin/MyERC20.sol";
-import { MyERC20v2 } from "../../src/Smart-Contract-Upgrades/Proxy-Pattern-With-OpenZeppelin/MyERC20v2.sol";
+import {MyERC20} from "../../src/Smart-Contract-Upgrades/Proxy-Pattern-With-OpenZeppelin/MyERC20.sol";
+import {MyERC20v2} from "../../src/Smart-Contract-Upgrades/Proxy-Pattern-With-OpenZeppelin/MyERC20v2.sol";
 
 contract MyERC20Test is Test {
     address proxyAddress;

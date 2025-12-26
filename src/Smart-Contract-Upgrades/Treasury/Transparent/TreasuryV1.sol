@@ -25,7 +25,7 @@ contract TreasuryV1 {
     }
 
     modifier onlyOwner() {
-        require (msg.sender == owner, "Not a owner");
+        require(msg.sender == owner, "Not a owner");
         _;
     }
 
@@ -117,7 +117,7 @@ contract Proxy {
                 revert(0, returndatasize())
             }
             default {
-                return (0, returndatasize())
+                return(0, returndatasize())
             }
         }
     }
@@ -168,7 +168,7 @@ contract ProxyAdmin {
     }
 
     function toggleTreasuryDeposits(address payable proxy) external onlyOwner {
-        (bool ok, ) = proxy.call(abi.encodeWithSignature("toggleDeposits()"));
+        (bool ok,) = proxy.call(abi.encodeWithSignature("toggleDeposits()"));
         require(ok, "Transaction to logic failed");
     }
 }
