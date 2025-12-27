@@ -30,6 +30,7 @@ contract CoinJoin is Auth, CircuitBreaker, ICoinJoin {
 
     // Repay the dai
     function join(address usr, uint wad) external override{
+        // vat.move
         cdp_engine.transfer_coin(address(this), usr, RAY * wad);
         coin.burn(msg.sender, wad);
         emit Join(usr, wad);
@@ -37,6 +38,7 @@ contract CoinJoin is Auth, CircuitBreaker, ICoinJoin {
 
     // Borrow dai from the system
     function exit(address usr, uint wad) external override not_stopped{
+        // vat.move
         cdp_engine.transfer_coin(msg.sender, address(this), RAY * wad);
         coin.mint(usr, wad);
         emit Exit(usr, wad);
