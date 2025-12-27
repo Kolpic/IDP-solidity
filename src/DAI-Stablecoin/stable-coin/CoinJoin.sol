@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: MIT
+
+/// join.sol -- Basic token adapters
+/// DaiJoin contract
+
+pragma solidity 0.8.24;
+
+import {Auth} from "../lib/Auth.sol";
+import {CircuitBreaker} from "../lib/CircuitBreaker.sol";
+import {RAY} from "../lib/Math.sol";
+import {ICDPEngine} from "../interfaces/ICDPEngine.sol";
+import {ICoin} from "../interfaces/ICoin.sol";
+import {ICoinJoin} from "../interfaces/ICoinJoin.sol";
+
+// DaiJoin contract renamed to CoinJoin
+contract CoinJoin is Auth, CircuitBreaker, ICoinJoin {
+    // old name -> vat
+    ICDPEngine public cdp_engine;      // CDP Engine
+    // old name -> dai
+    ICoin public coin;                 // Stablecoin Token
+
+    constructor(address _cdp_engine, address _coin) {
+        cdp_engine = ICDPEngine(_cdp_engine);
+        coin = ICoin(_coin);
+    }
+
+    function stop() external override auth {
+        _stop();
+    }
+
+    // Repay the dai
+    function join(address usr, uint wad) external override{
+        cdp_engine.transfer_coin(address(this), usr, RAY * wad);
+        coin.burn(msg.sender, wad);
+        emit Join(usr, wad);
+    }
+
+    // Borrow dai from the system
+    function exit(address usr, uint wad) external override not_stopped{
+        cdp_engine.transfer_coin(msg.sender, address(this), RAY * wad);
+        coin.mint(usr, wad);
+        emit Exit(usr, wad);
+    }
+}
