@@ -6,8 +6,10 @@ import {Auth} from "../lib/Auth.sol";
 import {CircuitBreaker} from "../lib/CircuitBreaker.sol";
 import {Math} from "../lib/Math.sol";
 import {ICDPEngineContract} from "../interfaces/ICDPEngineContract.sol";
+import {RAY} from "../lib/Math.sol";
 
 contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
+    uint256 public sys_max_debt;  // Total Debt Ceiling  [rad]
     // old name -> Ilk 
     struct Collateral {
         // old name -> Art -> Total Normalised Debt     [wad]
@@ -51,6 +53,44 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
     mapping(address => mapping (address => bool)) public can;
     // owner => balance of dai in units of
     mapping(address => uint256) public coin;
+
+
+    // --- Administration ---
+    function init(bytes32 collateral_type_id) external auth {
+        if (collaterals[collateral_type_id].rate_acc != 0) {
+            revert CollateralIsAlreadyInitialized();
+        }
+        collaterals[collateral_type_id].rate_acc = 10 ** 27;
+    }
+
+    /**
+     * Sets the total debt ceiling
+     * @param key The key to set
+     * @param value The value to set
+     * @notice old function -> file
+     */
+    function set(bytes32 key, uint value) external auth not_stopped {
+        if (key == "sys_max_debt") sys_max_debt = value;
+        else revert KeyNotRecognized();
+    }
+
+    /**
+     * Overloading the set function to set the collateral. Called by the oracle contract to set the spot price of the collateral
+     * @param collateral_type_id The id of the collateral
+     * @param key The what to set
+     * @param value The value to set
+     * @notice old function -> file
+     */
+    function set(bytes32 collateral_type_id, bytes32 key, uint value) external auth not_stopped {
+        if (key == "spot") collaterals[collateral_type_id].spot = value;
+        else if (key == "line") collaterals[collateral_type_id].max_debt = value;
+        else if (key == "dust") collaterals[collateral_type_id].min_debt = value;
+        else revert KeyNotRecognized();
+    }
+
+    function stop() external auth {
+        _stop();
+    }
 
     // Something like the erc-20 allowance function. It approves users to spend tokens on their behalf
     // old function -> hope

@@ -6,6 +6,8 @@ abstract contract ICDPEngineContract {
 
     // Errors
     error TransferNotAllowed();
+    error CollateralIsAlreadyInitialized();
+    error KeyNotRecognized();
 
     // Functions
     function allow_account_modification(address usr) external virtual;
