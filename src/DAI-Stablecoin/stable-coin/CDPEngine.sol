@@ -8,6 +8,43 @@ import {Math} from "../lib/Math.sol";
 import {ICDPEngineContract} from "../interfaces/ICDPEngineContract.sol";
 
 contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
+    // old name -> Ilk 
+    struct Collateral {
+        // old name -> Art -> Total Normalised Debt     [wad]
+        // what means normalised debt?
+        // normalised debt is the debt of the user divided by the rate accumation when debt is changed
+        // di = delta debt at time i
+        // ri = rate_acc at time i
+        // Art = d0 / r0 + d1 / r1 + ... + di / ri
+        uint256 debt;   
+        // old name -> rate -> Accumulated Rates         [ray]
+        uint256 rate_acc;  
+        // old name -> spot -> Price with Safety Margin  [ray]
+        // To prevent uncoverable debt when user is liquidated
+        uint256 spot;  
+        // old name -> line -> Debt Ceiling              [rad]
+        uint256 max_debt;  
+        // old name -> dust -> Urn Debt Floor            [rad]
+        // Minimum debt that have to be borrowed when creating a CDP
+        // To prevet users for crating a small debt, that a liquidator won't have insentive to liquidate it, 
+        // because he will loss money doing so 
+        uint256 min_debt;  
+    }
+    // old name -> Urn - vault (CDP)
+    struct Position {
+        // old name -> ink -> Locked Collateral  [wad]
+        uint256 collateral;   
+        // old name -> art -> Normalised Debt    [wad]
+        uint256 debt;   
+    }
+
+    // old name -> ilks
+    // id if the collateral => information about the collateral
+    mapping (bytes32 => Collateral)                     public collaterals;
+    // old name -> urns
+    // Ilk id (Collateral id) => owner => information about the position
+    mapping (bytes32 => mapping (address => Position )) public positions;
+    // id if the collateral => user => balance of collateral in units of [wad] (1e18)
     // collateral_type => user => balance of collateral in units of [wad] (1e18)
     mapping (bytes32 => mapping (address => uint)) public gem;  // [wad]
     // owener => user => bool, whether the user can modify the owners account
