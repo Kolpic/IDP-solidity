@@ -58,7 +58,7 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
 
 
     // --- Administration ---
-    function init(bytes32 collateral_type_id) external auth {
+    function init(bytes32 collateral_type_id) external override auth {
         if (collaterals[collateral_type_id].rate_acc != 0) {
             revert CollateralIsAlreadyInitialized();
         }
@@ -71,7 +71,7 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
      * @param value The value to set
      * @notice old function -> file
      */
-    function set(bytes32 key, uint value) external auth not_stopped {
+    function set(bytes32 key, uint value) external override auth not_stopped {
         if (key == "sys_max_debt") sys_max_debt = value;
         else revert KeyNotRecognized();
     }
@@ -83,14 +83,14 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
      * @param value The value to set
      * @notice old function -> file
      */
-    function set(bytes32 collateral_type_id, bytes32 key, uint value) external auth not_stopped {
+    function set(bytes32 collateral_type_id, bytes32 key, uint value) external override auth not_stopped {
         if (key == "spot") collaterals[collateral_type_id].spot = value;
         else if (key == "line") collaterals[collateral_type_id].max_debt = value;
         else if (key == "dust") collaterals[collateral_type_id].min_debt = value;
         else revert KeyNotRecognized();
     }
 
-    function stop() external auth {
+    function stop() external override auth {
         _stop();
     }
 

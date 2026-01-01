@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 uint256 constant WAD = 10 ** 18;
 uint256 constant RAY = 10 ** 27;
 uint256 constant RAD = 10 ** 45;
+uint256 constant ONE = 10 ** 27;
 
 library Math {
     function _add(uint x, int y) internal pure returns (uint256 z) {
@@ -39,5 +40,13 @@ library Math {
 
     function _max(uint256 x, uint256 y) internal pure returns (uint256 z) {
         z = x >= y ? x : y;
+    }
+
+    function mul(uint x, uint y) internal pure returns (uint z) {
+        require(y == 0 || (z = x * y) / y == x);
+    }
+
+    function rdiv(uint x, uint y) internal pure returns (uint z) {
+        z = mul(x, ONE) / y;
     }
 }
