@@ -27,4 +27,5 @@ abstract contract ICDPEngineContract {
     function set(bytes32 key, uint value) external virtual;
     function set(bytes32 collateral_type_id, bytes32 key, uint value) external virtual;
     function stop() external virtual;
+    function fold(bytes32 col_type, address coin_dst, int delta_rate) external virtual;
 }

@@ -221,4 +221,27 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
         positions[col_type][cdp] = pos;
         collaterals[col_type]    = col;
     }
+
+    // --- Rates ---
+    /**
+     * @notice Updates the rate accumulator for a collateral type
+     * @param col_type The collateral type
+     * @param coin_dst The user to update the rate for
+     * @param delta_rate The rate to update
+     * 
+     * @notice old function -> fold
+     */
+    function fold(bytes32 col_type, address coin_dst, int delta_rate) external override auth not_stopped{
+        Collateral storage col = collaterals[col_type];
+        // old total debt = col.rate_acc * col.debt
+        // new total debt = (col.rate_acc + delta_rate) * col.debt
+        // delta_coin = new total debt - old total debt
+        //            = (col.rate_acc + delta_rate) * col.debt
+        //              - col.rate_acc * col.debt
+        //            = delta_rate * col.debt
+        col.rate_acc = Math._add(col.rate_acc, delta_rate);
+        int256 delta_coin  = Math._mul(col.debt, delta_rate);
+        coin[coin_dst] = Math._add(coin[coin_dst], delta_coin);
+        sys_debt = Math._add(sys_debt, delta_coin);
+    }
 }
