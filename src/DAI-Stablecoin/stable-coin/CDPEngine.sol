@@ -53,6 +53,8 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
     mapping(address => mapping (address => bool)) public can;
     // owner => balance of dai in units of
     mapping(address => uint256) public coin;
+    // old name -> debt - total debt in the system 
+    uint256 public sys_debt;
 
 
     // --- Administration ---
@@ -123,5 +125,100 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
     // old function -> slip
     function modify_collateral_balance(bytes32 collateral_type, address user, int256 wad) external override auth {
         gem[collateral_type][user] = Math._add(gem[collateral_type][user], wad);
+    }
+
+    /**
+    * @dev --- CDP Manipulation ---
+    * @notice This function allows users to: borrow DAI, lock collateral, free collateral and repay DAI
+    * @param col_type The ideantifier of the gem(collateral)
+    * @param cdp Modify a cdp position for the user u
+    * @param gem_src Using gem(collateral) for user v
+    * @param coin_dst Creating coin(dai) for user w 
+    * @param delta_col The change in amount of collateral
+    * @param delta_debt The change in amount of debt
+    * 
+    * @notice old function -> frob
+    */
+    function modify_cdp(
+        // old name i - collateral id
+        bytes32 col_type, 
+        // old name u - address that maps to CDP - positions(urns), owner of the CDP
+        address cdp, 
+        // old name v -source of gem
+        address gem_src, 
+        // old name w - destination of coin
+        address coin_dst, 
+        // old name dink -delta collateral 
+        int256 delta_col, 
+        // old name dart -delta debt
+        int256 delta_debt
+    ) external override not_stopped {
+        Position memory pos = positions[col_type][cdp];
+        Collateral memory col = collaterals[col_type];
+        // ilk has been initialised
+        if (col.rate_acc == 0) {
+            revert VatIlkNotInitialized();
+        }
+
+        pos.collateral = Math._add(pos.collateral, delta_col);
+        pos.debt = Math._add(pos.debt, delta_debt);
+        col.debt = Math._add(col.debt, delta_debt);
+
+        // coin [rad] = col.rate_acc [ray] * debt [wad]
+
+        // debt that will be added to the global system debt
+        int256 delta_coin = Math._mul(col.rate_acc, delta_debt);
+        // total amount of dai that is owed to the cdp position. 
+        // The total amount of coin that this cdp position owes to the maker dao stablecoin system
+        uint256 coin_debt = col.rate_acc * pos.debt;
+        sys_debt = Math._add(sys_debt, delta_coin);
+
+        // either debt has decreased, or debt ceilings are not exceeded
+        require(
+            delta_debt <= 0 || 
+                (col.debt * col.rate_acc <= col.max_debt && sys_debt <= sys_max_debt), 
+            "Vat/ceiling-exceeded"
+        );
+
+        // urn is either less risky than before, or it is safe
+        require(
+            (delta_debt <= 0 && delta_col >= 0) ||
+                coin_debt <= pos.collateral * col.spot, 
+            "Vat/not-safe"
+        );
+
+        // urn is either more safe, or the owner consents
+        require(
+            (delta_debt <= 0 && delta_col >= 0) || 
+                can_modify_account(cdp, msg.sender), 
+            "Vat/not-allowed-cdp"
+        );
+
+        // collateral src consents
+        require(
+            // delta_col <= 0 means that we are removing the collateral from gem_src
+            delta_col <= 0 || can_modify_account(gem_src, msg.sender), 
+            "Vat/not-allowed-gem_src"
+        );
+        // debt dst consents
+        require(
+            delta_col >= 0 || can_modify_account(coin_dst, msg.sender), 
+            "Vat/not-allowed-coin_dst"
+        );
+
+        // urn has no debt, or a non-dusty amount
+        require(
+            pos.debt == 0 || coin_debt >= col.min_debt, 
+            "Vat/dust"
+        );
+
+        // Moving the collateral from gem to position, hence opposite sign
+        // if we lock collateral -> - gem, + pos (delta_debt >= 0)
+        // if we free collateral -> + gem, - pos (delta_debt <= 0)
+        gem[col_type][gem_src] = Math._sub(gem[col_type][gem_src], delta_col);
+        coin[coin_dst]    = Math._add(coin[coin_dst],    delta_coin);
+
+        positions[col_type][cdp] = pos;
+        collaterals[col_type]    = col;
     }
 }
