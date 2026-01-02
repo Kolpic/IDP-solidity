@@ -9,7 +9,10 @@ interface ICoinJoin {
     // Errors
 
     // Functions
+    function cdp_engine() external view returns(address);
+    function coin() external view returns(address);
+    
+    function stop() external;
     function join(address usr, uint wad) external;
     function exit(address usr, uint wad) external;
-    function stop() external;
 }

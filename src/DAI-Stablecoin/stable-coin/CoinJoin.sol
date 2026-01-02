@@ -14,14 +14,14 @@ import {ICoinJoin} from "../interfaces/ICoinJoin.sol";
 
 // DaiJoin contract renamed to CoinJoin
 contract CoinJoin is Auth, CircuitBreaker, ICoinJoin {
-    // old name -> vat
-    ICDPEngine public cdp_engine;      // CDP Engine
-    // old name -> dai
-    ICoin public coin;                 // Stablecoin Token
+    // vat
+    address public override cdp_engine;      // CDP Engine
+    // dai
+    address public override coin;            // Stablecoin Token
 
     constructor(address _cdp_engine, address _coin) {
-        cdp_engine = ICDPEngine(_cdp_engine);
-        coin = ICoin(_coin);
+        cdp_engine = _cdp_engine;
+        coin = _coin;
     }
 
     function stop() external override auth {
@@ -31,16 +31,16 @@ contract CoinJoin is Auth, CircuitBreaker, ICoinJoin {
     // Repay the dai
     function join(address usr, uint wad) external override{
         // vat.move
-        cdp_engine.transfer_coin(address(this), usr, RAY * wad);
-        coin.burn(msg.sender, wad);
+        ICDPEngine(cdp_engine).transfer_coin(address(this), usr, RAY * wad);
+        ICoin(coin).burn(msg.sender, wad);
         emit Join(usr, wad);
     }
 
     // Borrow dai from the system
     function exit(address usr, uint wad) external override not_stopped{
         // vat.move
-        cdp_engine.transfer_coin(msg.sender, address(this), RAY * wad);
-        coin.mint(usr, wad);
+        ICDPEngine(cdp_engine).transfer_coin(msg.sender, address(this), RAY * wad);
+        ICoin(coin).mint(usr, wad);
         emit Exit(usr, wad);
     }
 }
