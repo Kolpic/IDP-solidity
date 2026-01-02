@@ -3,40 +3,24 @@ pragma solidity 0.8.24;
 
 // VatLike
 import {ICDPEngineContract} from "../interfaces/ICDPEngineContract.sol";
-import {ISpotter} from "../interfaces/ISpotter.sol";
+import {ISpotter, IPriceFeed} from "../interfaces/ISpotter.sol";
 import {Auth} from "../lib/Auth.sol";
 import {CircuitBreaker} from "../lib/CircuitBreaker.sol";
 import {Math} from "../lib/Math.sol";
 
-// PipLike
-interface IPriceFeed {
-    // [wad]
-    function peek() external returns (uint256, bool);
-}
-
-// old name -> spotter
+// spotter
 contract Spotter is Auth, CircuitBreaker, ISpotter {
-    // --- Data ---
-    // old name -> Ilk
-    struct Collateral {
-        IPriceFeed pip;  // Price Feed
-        // spot = val / mat
-        // old name -> mat
-        uint256 liquidation_ratio;  // Liquidation ratio [ray]
-    }
-
-    // old name -> Ilk
-    mapping (bytes32 => Collateral) public collaterals;
-
-    // old name -> vat
-    ICDPEngineContract public cdp_engine;
+    // Ilk
+    mapping (bytes32 => Collateral) public override collaterals;
+    // vat
+    address public override cdp_engine;
     // par [ray] - value of DAI in the reference asset (e.g $1 per BEI)
-    // old name -> par
-    uint256 public par;  // ref per dai [ray]
+    // par
+    uint256 public override par;  // ref per dai [ray]
 
     // --- Init ---
     constructor(address _cdp_engine) {
-        cdp_engine = ICDPEngineContract(_cdp_engine);
+        cdp_engine = _cdp_engine;
         par = 10 ** 27;
     }
 
@@ -47,7 +31,7 @@ contract Spotter is Auth, CircuitBreaker, ISpotter {
      * @param key The key to set
      * @param pip_ The price feed
      * 
-     * @notice old function -> file
+     * @notice file
      */
     function set(bytes32 col_type, bytes32 key, address pip_) external override auth not_stopped{
         if (key == "pip") collaterals[col_type].pip = IPriceFeed(pip_);
@@ -59,7 +43,7 @@ contract Spotter is Auth, CircuitBreaker, ISpotter {
      * @param key The key to set
      * @param data The par value
      * 
-     * @notice old function -> file
+     * @notice file
      */
     function set(bytes32 key, uint data) external override auth not_stopped{
         if (key == "par") par = data;
@@ -72,7 +56,7 @@ contract Spotter is Auth, CircuitBreaker, ISpotter {
      * @param key The key to set
      * @param data The liquidation ratio
      * 
-     * @notice old function -> file
+     * @notice file
      */
     function set(bytes32 col_type, bytes32 key, uint data) external override auth not_stopped{
         if (key == "liquidation_ratio") collaterals[col_type].liquidation_ratio = data;
@@ -84,7 +68,7 @@ contract Spotter is Auth, CircuitBreaker, ISpotter {
      * @notice Pokes the price feed for a collateral type, can be called by any user
      * @param col_type The collateral type
      * 
-     * @notice old function -> poke
+     * @notice poke
      */
     function poke(bytes32 col_type) external override {
         (uint256 val, bool ok) = collaterals[col_type].pip.peek();
@@ -95,7 +79,7 @@ contract Spotter is Auth, CircuitBreaker, ISpotter {
                 Math.rdiv(val * 10 ** 9, par), 
                 collaterals[col_type].liquidation_ratio
             ) : 0;
-        cdp_engine.set(col_type, "spot", spot);
+        ICDPEngineContract(cdp_engine).set(col_type, "spot", spot);
         emit Poke(col_type, val, spot);
     }
 
