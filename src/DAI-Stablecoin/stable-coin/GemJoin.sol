@@ -8,16 +8,16 @@ import {ICDPEngine} from "../interfaces/ICDPEngine.sol";
 import {IGem} from "../interfaces/IGem.sol";
 
 contract GemJoin is Auth, CircuitBreaker, IGemJoin {
-    ICDPEngine public cdp_engine;     // CDP Engine
-    bytes32 public collateral_type;   // Collateral Type
-    IGem public gem;                  // The collateral that will be locked into the contract
-    uint8 public decimals;            // The number of decimals of the erc-20 token
+    address public override cdp_engine;        // CDP Engine
+    bytes32 public override collateral_type;   // Collateral Type
+    address public override gem;               // The collateral that will be locked into the contract
+    uint8 public override decimals;            // The number of decimals of the erc-20 token
 
     constructor(address _cdp_engine, bytes32 _collateral_type, address _gem) {
-        cdp_engine = ICDPEngine(_cdp_engine);
+        cdp_engine = _cdp_engine;
         collateral_type = _collateral_type;
-        gem = IGem(_gem);
-        decimals = gem.decimals();
+        gem = _gem;
+        decimals = IGem(gem).decimals();
     }
 
     function stop() external override auth {
@@ -44,10 +44,10 @@ contract GemJoin is Auth, CircuitBreaker, IGemJoin {
         if (int(wad) < 0) {
             revert JoinOverflow();
         }
-        // old function -> vat.slip
-        cdp_engine.modify_collateral_balance(collateral_type, usr, int(wad));
+        // vat.slip
+        ICDPEngine(cdp_engine).modify_collateral_balance(collateral_type, usr, int(wad));
         
-        if (!gem.transferFrom(msg.sender, address(this), wad)) {
+        if (!IGem(gem).transferFrom(msg.sender, address(this), wad)) {
             revert JoinTransferFailed();
         }
         emit Join(usr, wad);
@@ -63,10 +63,10 @@ contract GemJoin is Auth, CircuitBreaker, IGemJoin {
         if (wad > 2 ** 255) {
             revert ExitOverflow();
         }
-        // old function -> vat.slip
-        cdp_engine.modify_collateral_balance(collateral_type, msg.sender, -int(wad));
+        // vat.slip
+        ICDPEngine(cdp_engine).modify_collateral_balance(collateral_type, msg.sender, -int(wad));
         
-        if (!gem.transfer(usr, wad)) {
+        if (!IGem(gem).transfer(usr, wad)) {
             revert ExitTransferFailed();
         }
         emit Exit(usr, wad);

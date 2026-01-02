@@ -13,7 +13,12 @@ interface IGemJoin {
     error ExitTransferFailed();
 
     // Functions
+    function cdp_engine() external view returns (address);
+    function collateral_type() external view returns (bytes32);
+    function gem() external view returns (address);
+    function decimals() external view returns (uint8);
+
+    function stop() external;
     function join(address usr, uint wad) external;
     function exit(address usr, uint wad) external;
-    function stop() external;
 }
