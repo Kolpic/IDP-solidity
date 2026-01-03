@@ -7,6 +7,9 @@ ast = true
 build_info = true
 extra_output = ["storageLayout"]
 fs_permissions = [{ access = "read", path = "out" }]
+via_ir = true
+optimizer = true
+optimizer_runs = 200
 
 remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
