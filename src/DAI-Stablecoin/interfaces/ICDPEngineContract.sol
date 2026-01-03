@@ -55,6 +55,8 @@ abstract contract ICDPEngineContract {
     function can(address owner, address usr) external view virtual returns (bool);
     function coin(address owner) external view virtual returns (uint256);
     function sys_debt() external view virtual returns (uint256);
+    function unbacked_debts(address user) external view virtual returns (uint256);
+    function sys_unbacked_debt() external view virtual returns (uint256);
 
     function init(bytes32 collateral_type_id) external virtual;
     function set(bytes32 key, uint value) external virtual;
@@ -67,4 +69,6 @@ abstract contract ICDPEngineContract {
     function modify_collateral_balance(bytes32 collateral_type, address user, int256 wad) external virtual;
     function modify_cdp(bytes32 col_type, address cdp, address gem_src, address coin_dst, int256 delta_col, int256 delta_debt) external virtual;
     function update_rate_acc(bytes32 col_type, address coin_dst, int delta_rate) external virtual;
+    function burn(uint rad) external virtual;
+    function mint(address debt_dst, address coin_dst, uint rad) external virtual;
 }

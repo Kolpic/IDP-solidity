@@ -25,6 +25,10 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
     mapping(address => uint256) public override coin;
     // debt - total debt in the system 
     uint256 public override sys_debt;
+    // sin
+    mapping(address => uint256) public override unbacked_debts; // Unbacked debt [rad]
+    // vice
+    uint256 public override sys_unbacked_debt; // Total Unbacked Dai [rad]
 
 
     // --- Administration ---
@@ -213,5 +217,40 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
         int256 delta_coin  = Math._mul(col.debt, delta_rate);
         coin[coin_dst] = Math._add(coin[coin_dst], delta_coin);
         sys_debt = Math._add(sys_debt, delta_coin);
+    }
+
+    // --- Settlement ---
+    /**
+     * @notice This function is repaying for the unbacked debt from the coin
+     * balance of msg.sender, the coin balance of msg.sender is deducted
+     * and the unbacked debt is also deducted. The total unbacked debt and the system debt
+     * are also deducted.
+     * @param rad The amount of unbacked debt to heal
+     * 
+     * @notice heal
+     */
+    function burn(uint rad) external override {
+        address u = msg.sender;
+        unbacked_debts[u] -= rad;
+        coin[u] -= rad;
+        sys_unbacked_debt -= rad;
+        sys_debt -= rad;
+    }
+
+    /**
+     * @notice Mints DAI to coin_dst for the amount rad and the unbacked debt
+     * will be given to the debt_dst address. When this function is called,
+     * the system debt will be increased and the system unbacked debt will be increased
+     * @param debt_dst The address to mint the unbacked debt to
+     * @param coin_dst The address to mint the dai to
+     * @param rad The amount of unbacked debt to mint
+     * 
+     * @notice suck
+     */
+    function mint(address debt_dst, address coin_dst, uint rad) external override auth {
+        unbacked_debts[debt_dst] += rad;
+        coin[coin_dst] += rad;
+        sys_unbacked_debt += rad;
+        sys_debt += rad;
     }
 }
