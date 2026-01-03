@@ -71,4 +71,5 @@ abstract contract ICDPEngineContract {
     function update_rate_acc(bytes32 col_type, address coin_dst, int delta_rate) external virtual;
     function burn(uint rad) external virtual;
     function mint(address debt_dst, address coin_dst, uint rad) external virtual;
+    function grab(bytes32 col_type, address cdp, address gem_dst, address debt_dst, int delta_col, int delta_debt) external virtual;
 }

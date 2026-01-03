@@ -253,4 +253,52 @@ contract CDPEngine is Auth, CircuitBreaker, ICDPEngineContract {
         sys_unbacked_debt += rad;
         sys_debt += rad;
     }
+
+    /**
+     * @notice This function is used to kick start a liquidation
+     * grab - liquidate a cdp
+     *  - i is the modifier of the collateral
+     *  - modify the cdp of user u
+     *  - give gem to user v
+     *  - give dai to user w
+     *  - create sin(unbacked debt) for user w
+     *  - dink is the change in collateral, the amount of collateral to take from user u
+     *  - dart is the change in debt
+     * @param col_type The id of the collateral
+     * @param cdp The address of the cdp
+     * @param gem_dst The address of the gem source
+     * @param debt_dst The address of the coin destination
+     * @param delta_col The change in amount of collateral
+     * @param delta_debt The change in amount of debt
+     * 
+     * @notice grab
+     */
+    function grab(
+        // i
+        bytes32 col_type, // The modifier of the collateral
+        // u 
+        address cdp,      // The address of the cdp
+        // v  
+        address gem_dst,  // The address of the gem destination
+        // w 
+        address debt_dst,  // The address of the debt destination
+        // dink 
+        int delta_col,  // The change in amount of collateral, opposite sign of the amount of collateral to take from the user
+        // dart 
+        int delta_debt // The change in amount of debt, opposite sign of the amount of debt to take from the user
+    ) external override auth {
+        Position storage pos = positions[col_type][cdp];
+        Collateral storage col = collaterals[col_type];
+
+        pos.collateral = Math._add(pos.collateral, delta_col);
+        pos.debt = Math._add(pos.debt, delta_debt);
+        col.debt = Math._add(col.debt, delta_debt);
+
+        int256 delta_coin = Math._mul(col.rate_acc, delta_debt);
+
+        gem[col_type][gem_dst] = Math._sub(gem[col_type][gem_dst], delta_col);
+        unbacked_debts[debt_dst] = Math._sub(unbacked_debts[debt_dst], delta_coin);
+        sys_unbacked_debt = Math._sub(sys_unbacked_debt, delta_coin);
+    }
+
 }
